@@ -9,7 +9,7 @@ from utils.helper import SpeedLimitTimer, PreviousStateRecorder
 from utils.typo_fix import typo_fix
 from config import CONFIG
 
-from codex_completion import codex_completion
+from gpt35_turbo_completion import gpt35_turbo_completion
 from utils.sql import sql_pred_parse, sv_dict_to_string
 from prompting import get_prompt, conversion, table_prompt
 from retriever.code.embed_based_retriever import EmbeddingRetriever
@@ -118,12 +118,16 @@ def run(test_set, turn=-1, use_gold=False):
         # record the prompt
         data_item['prompt'] = prompt_text
 
+        # prompt 확인용
+        # print(prompt_text)
+        # continue
+
         # codex completion
         complete_flag = False
         parse_error_count = 0
         while not complete_flag:
             try:
-                completion = codex_completion(prompt_text)
+                completion = gpt35_turbo_completion(prompt_text)
                 # convert back the sql completion result
                 completion = conversion(completion, reverse=True)
             except Exception as e:
