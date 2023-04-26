@@ -6,10 +6,16 @@ def sql_pred_parse(pred):
     # parse sql results and fix general errors
 
     pred = " * FROM " + pred
+    # 마지막에 ; 가 붙는 부분은 출력하지 못하는 문제를 해결
+    if pred.endswith(';'):
+        pred = pred.rstrip(';')
 
     # fix for no states
     if pred == " * FROM  WHERE ":
         return {}
+    
+    # completion 뒤에 가끔씩 공백 붙는 경우 존재
+    pred = pred.strip()
 
     # Here we need to write a parser to convert back to dialogue state
     pred_slot_values = []
