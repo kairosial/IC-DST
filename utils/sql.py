@@ -5,7 +5,7 @@ from collections import OrderedDict
 def sql_pred_parse(pred):
     # parse sql results and fix general errors
 
-    pred = " * FROM" + pred
+    pred = " * FROM " + pred
 
     # fix for no states
     if pred == " * FROM  WHERE ":

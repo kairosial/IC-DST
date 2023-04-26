@@ -24,6 +24,7 @@ parser.add_argument('--output_file_name', type=str, default="debug", help="filen
 parser.add_argument('--output_dir', type=str, default="./expts/debug", help="directory to save running log and configs")
 parser.add_argument('--mwz_ver', type=str, default="2.1", choices=['2.1', '2.4'], help="version of MultiWOZ")  
 parser.add_argument('--test_fn', type=str, default='', help="file to evaluate on, empty means use the test set")
+parser.add_argument('--save_interval', type=int, default=10, help="interval to save running_log.json")
 parser.add_argument('--test_size', type=int, default=10, help="size of the test set")
 args = parser.parse_args()
 
@@ -96,7 +97,7 @@ def run(test_set, turn=-1, use_gold=False):
     total_acc = 0
     total_f1 = 0
 
-    for data_item in tqdm(selected_set):
+    for data_idx, data_item in enumerate(tqdm(selected_set)):
         n_total += 1
 
         completion = ""
@@ -145,7 +146,7 @@ def run(test_set, turn=-1, use_gold=False):
                     temp_parse = sql_pred_parse(completion)
                 except:
                     parse_error_count += 1
-                    if parse_error_count >= 5:
+                    if parse_error_count >= 2:
                         complete_flag = True
                 else:
                     complete_flag = True
@@ -209,7 +210,20 @@ def run(test_set, turn=-1, use_gold=False):
             result_dict[data_item['turn_id']].append(0)
             print("\n=====================wrong!=======================")
         
-        print("\n")
+        # save result
+        data_item['JGA'] = n_correct / n_total
+        data_item['SA'] = total_acc / n_total
+        data_item['Joint_F1'] = total_f1 / n_total
+        data_item['pred_status'] = 'correct' if this_jga else 'wrong'
+
+        all_result.append(data_item)
+
+        # Log Checkpoint
+        if data_idx % args.save_interval == 0:
+            with open(os.path.join(args.output_dir,f'running_log.json'),'w') as f:
+                json.dump(all_result, f, indent=4)
+
+        print("\n\n\n####################################################################################################################\n\n\n")
 
     print(f"correct {n_correct}/{n_total}  =  {n_correct / n_total}")
     print(f"Slot Acc {total_acc/n_total}")
