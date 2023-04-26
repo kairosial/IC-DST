@@ -188,7 +188,7 @@ def run(test_set, turn=-1, use_gold=False):
         data_item['pred'] = all_slot_values
         data_item['ontology_path'] = ontology_path
         data_item['completion'] = completion
-        all_result.append(data_item)
+        data_item['predicted_slot_values'] = predicted_slot_values
 
         # print the result
         print(completion)
