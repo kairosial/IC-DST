@@ -2,6 +2,7 @@ import os
 import json
 import argparse
 import copy
+import time
 from collections import defaultdict
 from tqdm import tqdm
 from utils.helper import SpeedLimitTimer, PreviousStateRecorder
@@ -13,17 +14,24 @@ from utils.sql import sql_pred_parse, sv_dict_to_string
 from prompting import get_prompt, conversion, table_prompt
 from retriever.code.embed_based_retriever import EmbeddingRetriever
 from evaluate_metrics import evaluate
+from evaluate_FGA import FGA
 
 # input arguments
 parser = argparse.ArgumentParser()
 parser.add_argument('--train_fn', type=str, help="training data file (few-shot or full shot)", required=True)  # e.g. "./data/mw21_10p_train_v3.json"
 parser.add_argument('--retriever_dir', type=str, required=True, help="sentence transformer saved path")  # "./retriever/expts/mw21_10p_v3_0304_400_20"
+parser.add_argument('--output_file_name', type=str, default="debug", help="filename to save running log and configs")
 parser.add_argument('--output_dir', type=str, default="./expts/debug", help="directory to save running log and configs")
 parser.add_argument('--mwz_ver', type=str, default="2.1", choices=['2.1', '2.4'], help="version of MultiWOZ")  
 parser.add_argument('--test_fn', type=str, default='', help="file to evaluate on, empty means use the test set")
+parser.add_argument('--test_size', type=int, default=10, help="size of the test set")
 args = parser.parse_args()
 
+# current time
+cur_time = time.strftime('%y%m%d_%H%M-')
+
 # create the output folder
+args.output_dir = 'expts/' + cur_time + args.output_file_name + '_0to' + str(args.test_size)
 os.makedirs(args.output_dir, exist_ok=True)
 
 with open(os.path.join(args.output_dir, "exp_config.json"), 'w') as f:
@@ -208,12 +216,30 @@ def run(test_set, turn=-1, use_gold=False):
     for k, v in result_dict.items():
         print(f"accuracy of turn {k} is {sum(v)}/{len(v)} = {sum(v) / len(v)}")
 
+    # save score in score.txt
+    with open(os.path.join(args.output_dir, "score.txt"), 'w') as f:
+        f.write(f"correct {n_correct}/{n_total}  =  {n_correct / n_total}\n")
+        f.write(f"Slot Acc {total_acc/n_total}\n")
+        f.write(f"Joint F1 {total_f1/n_total}\n")
+         # calculate the accuracy of each turn
+        for k, v in result_dict.items():
+            f.write(f"accuracy of turn {k} is {sum(v)}/{len(v)} = {sum(v) / len(v)}\n")
+
     return all_result
 
 
 if __name__ == "__main__":
 
-    all_results = run(test_set)
+    limited_set = test_set[:args.test_size]
+    all_results = run(limited_set)
 
     with open(os.path.join(args.output_dir, "running_log.json"), 'w') as f:
         json.dump(all_results, f, indent=4)
+    
+    # save FGA in score.txt
+    with open(os.path.join(args.output_dir, "score.txt"), 'a') as f:
+        fga_result = FGA(os.path.join(args.output_dir, "running_log.json"))
+        f.write("\nFGA Result\n")
+        f.write("\n".join(fga_result))
+    
+    print(f"End time: {time.strftime('%y%m%d_%H%M')}")
