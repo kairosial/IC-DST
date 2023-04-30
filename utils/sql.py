@@ -5,15 +5,32 @@ from collections import OrderedDict
 def sql_pred_parse(pred):
     # parse sql results and fix general errors
 
-    pred = " * FROM " + pred
-    # 마지막에 ; 가 붙는 부분은 출력하지 못하는 문제를 해결
-    if pred.endswith(';'):
-        pred = pred.rstrip(';')
-
     # fix for no states
-    if pred == " * FROM  WHERE ":
+    no_state_sql = [' WHERE ;', 'WHERE ;', ' WHERE ', 'WHERE ', ' WHERE', 'WHERE']
+    if pred in no_state_sql:
         return {}
+
+    # 다중 도메인에 대한 JOIN 연산 completion은 공백으로 처리
+    if 'JOIN' in pred:
+        return {}
+
+    pred = " * FROM " + pred
     
+    # 세미콜론(;) 이후의 문자열 제거
+    pred = pred.split(";")[0]
+    
+    # LIMIT이 이후의 문자열 제거
+    if 'LIMIT' in pred:
+        pred = pred.split('LIMIT')[0]
+
+    # ORDER BY 이후의 문자열 제거
+    if 'ORDER BY' in pred:
+        pred = pred.split('ORDER BY')[0]
+
+    # 쌍따옴표를 따옴표로
+    if '\"' in pred:
+        pred = pred.replace('\"', '\'')
+
     # completion 뒤에 가끔씩 공백 붙는 경우 존재
     pred = pred.strip()
 
@@ -25,7 +42,7 @@ def sql_pred_parse(pred):
         return {}
     stmt = parsed[0]
     sql_toks = pred.split()
-    operators = [" = ", " LIKE ", " < ", " > ", " >= ", " <= "]
+    operators = [" = ", " LIKE ", " < ", " > ", " >= ", " <= ", "="]
 
     if "AS" in pred:
         as_indices = [i for i, x in enumerate(sql_toks) if x == "AS"]
@@ -52,9 +69,21 @@ def sql_pred_parse(pred):
             slot_values_str = slot_values_str.replace(operator, "-")
         slot_values = slot_values_str.split(" AND ")
 
+        # IS NOT NULL이 붙는 경우 제거
+        if 'NULL' in slot_values[-1]:
+            del slot_values[-1]
+        
+        # [insert appropriate time]과 같은 경우 제거
+        if '[' in slot_values[-1]:
+            del slot_values[-1]
+
         pred_slot_values.extend([table_name + "-" + sv for sv in slot_values if slot_values != ['']])
 
     pred_slot_values = {'-'.join(sv_pair.split('-')[:-1]): sv_pair.split('-')[-1] for sv_pair in pred_slot_values}
+
+    # value 소문자화
+    for key in pred_slot_values:
+        pred_slot_values[key] = pred_slot_values[key].lower()
 
     # remove _ in SQL columns
     pred_slot_values = {slot.replace('_', ' '): value for slot, value in pred_slot_values.items()}
