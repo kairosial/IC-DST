@@ -32,7 +32,8 @@ args = parser.parse_args()
 cur_time = time.strftime('%y%m%d_%H%M-')
 
 # create the output folder
-args.output_dir = 'expts/' + cur_time + args.output_file_name + '_0to' + str(args.test_size)
+# args.output_dir = 'expts/' + cur_time + args.output_file_name + '_0to' + str(args.test_size)
+args.output_dir = 'expts/' + cur_time + args.output_file_name
 os.makedirs(args.output_dir, exist_ok=True)
 
 with open(os.path.join(args.output_dir, "exp_config.json"), 'w') as f:
@@ -248,8 +249,8 @@ def run(test_set, turn=-1, use_gold=False):
 
 if __name__ == "__main__":
 
-    limited_set = test_set[:args.test_size]
-    all_results = run(limited_set)
+    # limited_set = test_set[:args.test_size]
+    all_results = run(test_set)
 
     with open(os.path.join(args.output_dir, "running_log.json"), 'w') as f:
         json.dump(all_results, f, indent=4)
