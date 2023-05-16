@@ -25,6 +25,15 @@ python sample.py --input_fn mwz2.1/train_dials.json --target_fn mw21_10p_train_v
 # sample a 10% training set (same for 2.1 and 2.4)
 python sample.py --input_fn mwz2.1/train_dials.json --target_fn mw21_10p_train_v3.json --ratio 0.1 --seed 888
 
+# sample a 25% training set (same for 2.1 and 2.4)
+python sample.py --input_fn mwz2.1/train_dials.json --target_fn mw21_25p_train_v1.json --ratio 0.25 --seed 88
+
+# sample a 25% training set (same for 2.1 and 2.4)
+python sample.py --input_fn mwz2.1/train_dials.json --target_fn mw21_25p_train_v2.json --ratio 0.25 --seed 42
+
+# sample a 25% training set (same for 2.1 and 2.4)
+python sample.py --input_fn mwz2.1/train_dials.json --target_fn mw21_25p_train_v3.json --ratio 0.25 --seed 888
+
 # process MultiWOZ 2.1 and 2.4 train set (they are the same)
 python sample.py --input_fn mwz2.1/train_dials.json --target_fn mw21_100p_train.json --ratio 1.0
 
