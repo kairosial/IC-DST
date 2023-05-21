@@ -32,7 +32,6 @@ args = parser.parse_args()
 cur_time = time.strftime('%y%m%d_%H%M-')
 
 # create the output folder
-# args.output_dir = 'expts/' + cur_time + args.output_file_name + '_0to' + str(args.test_size)
 args.output_dir = 'expts/' + cur_time + args.output_file_name
 os.makedirs(args.output_dir, exist_ok=True)
 
