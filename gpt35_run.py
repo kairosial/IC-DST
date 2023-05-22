@@ -77,7 +77,7 @@ def run(test_set, turn=-1, use_gold=False):
     # turn = 1 means evalute two-turn dialogues... etc.
     # when use_gold = True, the context are gold context (for analysis purpose)
 
-    timer = SpeedLimitTimer(second_per_step=3.1)  # openai limitation 20 queries/min
+    timer = SpeedLimitTimer(second_per_step=3.5)  # openai limitation 20 queries/min
 
     result_dict = defaultdict(list)  # use to record the accuracy
 
@@ -248,8 +248,8 @@ def run(test_set, turn=-1, use_gold=False):
 
 if __name__ == "__main__":
 
-    # limited_set = test_set[:args.test_size]
-    all_results = run(test_set)
+    limited_set = test_set[:args.test_size]
+    all_results = run(limited_set)
 
     with open(os.path.join(args.output_dir, "running_log.json"), 'w') as f:
         json.dump(all_results, f, indent=4)
